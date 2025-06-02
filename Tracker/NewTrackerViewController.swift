@@ -173,8 +173,14 @@ class NewTrackerViewController: UIViewController {
     }
     
     private func setupActions() {
+        nameTextField.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
         cancelButton.addTarget(self, action: #selector(dismissSelf), for: .touchUpInside)
         createButton.addTarget(self, action: #selector(createTracker), for: .touchUpInside)
+    }
+    
+    @objc private func textFieldDidChange() {
+        let isEmpty = nameTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true
+        createButton.backgroundColor = isEmpty ? .systemGray3 : .black
     }
     
     @objc private func createTracker() {
