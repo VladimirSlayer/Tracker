@@ -21,11 +21,13 @@ final class SwitchCell: UITableViewCell {
 
     private func setupUI() {
         dayLabel.translatesAutoresizingMaskIntoConstraints = false
+        dayLabel.textColor = UIColor(named: "Black[Day]")
         daySwitch.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(dayLabel)
         contentView.addSubview(daySwitch)
         selectionStyle = .none
-        backgroundColor = .systemGray6
+        backgroundColor = UIColor(named: "Background[Day]")
+        daySwitch.onTintColor = UIColor(named: "SwitchTintColor")
         NSLayoutConstraint.activate([
             dayLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
             dayLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),

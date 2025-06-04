@@ -11,6 +11,7 @@ class TrackersViewController: UIViewController {
         let label = UILabel()
         label.text = "Трекеры"
         label.font = .boldSystemFont(ofSize: 34)
+        label.textColor = .black
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -28,13 +29,27 @@ class TrackersViewController: UIViewController {
         picker.datePickerMode = .date
         picker.preferredDatePickerStyle = .compact
         picker.translatesAutoresizingMaskIntoConstraints = false
+        picker.backgroundColor = UIColor(named: "DatePicker_BG")
         return picker
     }()
     
     private let searchField: UISearchBar = {
         let searchBar = UISearchBar()
-        searchBar.placeholder = "Поиск"
-        searchBar.searchBarStyle = .minimal
+        let placeholderColor = UIColor(named: "SearchBar_Label") ?? .gray
+        searchBar.searchTextField.attributedPlaceholder = NSAttributedString(
+            string: "Поиск",
+            attributes: [.foregroundColor: placeholderColor]
+        )
+        if let iconView = searchBar.searchTextField.leftView as? UIImageView {
+                iconView.tintColor = UIColor(named: "SearchBar_Label")
+            }
+        if let iconView = searchBar.searchTextField.rightView as? UIImageView {
+                iconView.tintColor = UIColor(named: "SearchBar_Label")
+            }
+        searchBar.searchBarStyle = .default
+        searchBar.backgroundImage = UIImage()
+        searchBar.searchTextField.backgroundColor = UIColor(named: "SearchBar_BG")
+        searchBar.searchTextField.textColor = .black
         searchBar.translatesAutoresizingMaskIntoConstraints = false
         return searchBar
     }()
@@ -87,7 +102,16 @@ class TrackersViewController: UIViewController {
         reloadVisibleTrackers()
         setupActions()
         collectionView.register(TrackerCell.self, forCellWithReuseIdentifier: TrackerCell.identifier)
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
+        tapGesture.cancelsTouchesInView = false
+        view.addGestureRecognizer(tapGesture)
+
     }
+    
+    @objc private func dismissKeyboard() {
+        searchField.resignFirstResponder()
+    }
+
     
     private func setupActions() {
         addButton.addTarget(self, action: #selector(addTrackerTapped), for: .touchUpInside)
@@ -147,7 +171,18 @@ class TrackersViewController: UIViewController {
                 case .habit:
                     return tracker.schedule.contains(weekday) && matchesSearch
                 case .event:
-                    return Calendar.current.isDate(tracker.createdDate, inSameDayAs: currentDate) && matchesSearch
+                    let isAfterCreation = currentDate >= tracker.createdDate
+                    let wasCompleted = completedTrackers.contains {
+                        $0.trackerId == tracker.id
+                    }
+                    let isCompletedToday = completedTrackers.contains {
+                        $0.trackerId == tracker.id &&
+                        Calendar.current.isDate($0.date, inSameDayAs: currentDate)
+                    }
+
+                    return matchesSearch && (
+                        (!wasCompleted && isAfterCreation) || isCompletedToday
+                    )
                 }
             }
 

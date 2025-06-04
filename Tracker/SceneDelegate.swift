@@ -17,6 +17,19 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         let tabBarController = UITabBarController()
         tabBarController.viewControllers = [trackersVC, statisticsVC]
         
+        let separatorView = UIView()
+        separatorView.translatesAutoresizingMaskIntoConstraints = false
+        separatorView.backgroundColor = UIColor.black.withAlphaComponent(0.3)
+
+        tabBarController.view.addSubview(separatorView)
+
+        NSLayoutConstraint.activate([
+            separatorView.leadingAnchor.constraint(equalTo: tabBarController.tabBar.leadingAnchor),
+            separatorView.trailingAnchor.constraint(equalTo: tabBarController.tabBar.trailingAnchor),
+            separatorView.bottomAnchor.constraint(equalTo: tabBarController.tabBar.topAnchor),
+            separatorView.heightAnchor.constraint(equalToConstant: 0.5)
+        ])
+        
         window = UIWindow(windowScene: windowScene)
         window?.rootViewController = tabBarController
         window?.makeKeyAndVisible()

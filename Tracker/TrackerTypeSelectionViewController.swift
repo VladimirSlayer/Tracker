@@ -10,6 +10,7 @@ class TrackerTypeSelectionViewController: UIViewController {
         label.text = "Создание трекера"
         label.font = .systemFont(ofSize: 16, weight: .medium)
         label.translatesAutoresizingMaskIntoConstraints = false
+        label.textColor = UIColor(named: "Black[Day]")
         return label
     }()
     

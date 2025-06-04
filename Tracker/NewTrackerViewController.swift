@@ -7,19 +7,27 @@ class NewTrackerViewController: UIViewController {
     private var selectedSchedule: [Weekday] = []
     var initialDate: Date = Date()
     
+    private var scheduleTopConstraint: NSLayoutConstraint?
+    private var scheduleBottomConstraint: NSLayoutConstraint?
+    
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
         label.text = self.trackerType == .habit ? "Новая привычка" : "Новое нерегулярное событие"
         label.font = .systemFont(ofSize: 16, weight: .medium)
         label.translatesAutoresizingMaskIntoConstraints = false
+        label.textColor = UIColor(named: "Black[Day]")
         return label
     }()
     
     private let nameTextField: UITextField = {
         let textField = UITextField()
-        textField.placeholder = "Введите название трекера"
+        textField.attributedPlaceholder = NSAttributedString(
+            string: "Введите название трекера",
+            attributes: [NSAttributedString.Key.foregroundColor: UIColor(named: "Gray")]
+        )
         textField.font = .systemFont(ofSize: 17)
-        textField.backgroundColor = .systemGray6
+        textField.backgroundColor = UIColor(named: "Background[Day]")
+        textField.textColor = UIColor(named: "Black[Day]")
         textField.layer.cornerRadius = 12
         textField.translatesAutoresizingMaskIntoConstraints = false
         textField.setLeftPaddingPoints(12)
@@ -28,7 +36,7 @@ class NewTrackerViewController: UIViewController {
     
     private let settingsContainer: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor.systemGray6
+        view.backgroundColor = .white
         view.layer.cornerRadius = 16
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
@@ -62,48 +70,92 @@ class NewTrackerViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
+        tapGesture.cancelsTouchesInView = false
+        view.addGestureRecognizer(tapGesture)
         layoutUI()
         setupActions()
+        updateCreateButtonState()
+    }
+    
+    @objc private func dismissKeyboard() {
+        view.endEditing(true)
     }
     
     @objc private func openSchedule() {
         let vc = ScheduleViewController()
         vc.delegate = self
+        vc.preselectedDays = selectedSchedule
         present(vc, animated: true)
     }
     
     func makeCellButton(title: String) -> UIButton {
         let button = UIButton()
         button.translatesAutoresizingMaskIntoConstraints = false
-        button.backgroundColor = .clear
-
+        button.backgroundColor = UIColor(named: "Background[Day]")
+        
         let titleLabel = UILabel()
         titleLabel.text = title
         titleLabel.font = .systemFont(ofSize: 17)
-        titleLabel.textColor = .black
+        titleLabel.textColor = UIColor(named: "Black[Day]")
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
-
+        titleLabel.isUserInteractionEnabled = false
+        
+        let subtitleLabel = UILabel()
+        subtitleLabel.font = .systemFont(ofSize: 15)
+        subtitleLabel.textColor = UIColor(named: "Gray")
+        subtitleLabel.numberOfLines = 0
+        subtitleLabel.translatesAutoresizingMaskIntoConstraints = false
+        subtitleLabel.isUserInteractionEnabled = false
+        subtitleLabel.tag = 99 // <- используем для обновления текста
+        subtitleLabel.isHidden = true
+        
+        let textStack = UIStackView()
+        textStack.axis = .vertical
+        textStack.spacing = 2
+        textStack.translatesAutoresizingMaskIntoConstraints = false
+        textStack.isUserInteractionEnabled = false
+        
+        textStack.addArrangedSubview(titleLabel)
+        
+        // Добавляем subtitle только если будет показан
+        subtitleLabel.isHidden = true
+        subtitleLabel.setContentHuggingPriority(.defaultLow, for: .vertical)
+        subtitleLabel.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
+        textStack.addArrangedSubview(subtitleLabel)
+        
+        
         let chevron = UIImageView(image: UIImage(systemName: "chevron.right"))
-        chevron.tintColor = .systemGray2
+        chevron.tintColor = UIColor(named: "Gray")
         chevron.translatesAutoresizingMaskIntoConstraints = false
         chevron.setContentHuggingPriority(.required, for: .horizontal)
-
-        let stack = UIStackView(arrangedSubviews: [titleLabel, chevron])
-        stack.axis = .horizontal
-        stack.alignment = .center
-        stack.distribution = .fill
-        stack.spacing = 8
-        stack.translatesAutoresizingMaskIntoConstraints = false
-
-        button.addSubview(stack)
-
+        chevron.isUserInteractionEnabled = false
+        
+        let fullStack = UIStackView(arrangedSubviews: [textStack, chevron])
+        fullStack.axis = .horizontal
+        fullStack.alignment = .center
+        fullStack.distribution = .fill
+        fullStack.spacing = 8
+        fullStack.translatesAutoresizingMaskIntoConstraints = false
+        fullStack.isUserInteractionEnabled = false
+        
+        let top = fullStack.topAnchor.constraint(equalTo: button.topAnchor, constant: 12)
+        let bottom = fullStack.bottomAnchor.constraint(equalTo: button.bottomAnchor, constant: -12)
+        
+        button.addSubview(fullStack)
+        
         NSLayoutConstraint.activate([
-            stack.leadingAnchor.constraint(equalTo: button.leadingAnchor, constant: 16),
-            stack.trailingAnchor.constraint(equalTo: button.trailingAnchor, constant: -16),
-            stack.topAnchor.constraint(equalTo: button.topAnchor, constant: 25),
-            stack.bottomAnchor.constraint(equalTo: button.bottomAnchor, constant: -25)
+            fullStack.leadingAnchor.constraint(equalTo: button.leadingAnchor, constant: 16),
+            fullStack.trailingAnchor.constraint(equalTo: button.trailingAnchor, constant: -16),
+            top,
+            bottom
         ])
-
+        
+        if title == "Расписание" {
+            scheduleTopConstraint = top
+            scheduleBottomConstraint = bottom
+        }
+        
         return button
     }
     
@@ -116,8 +168,16 @@ class NewTrackerViewController: UIViewController {
         {
             settingsContainer.addSubview(separator)
             separator.translatesAutoresizingMaskIntoConstraints = false
-            separator.backgroundColor = .systemGray4
+            separator.backgroundColor = UIColor(named: "Gray")
             settingsContainer.addSubview(scheduleButton)
+            categoryButton.layer.cornerRadius = 16
+            categoryButton.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
+            scheduleButton.layer.cornerRadius = 16
+            scheduleButton.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
+        }
+        if (trackerType == .event)
+        {
+            categoryButton.layer.cornerRadius = 16
         }
         scheduleButton.addTarget(self, action: #selector(openSchedule), for: .touchUpInside)
         view.addSubview(cancelButton)
@@ -154,6 +214,7 @@ class NewTrackerViewController: UIViewController {
         if (trackerType == .event){
             NSLayoutConstraint.activate([
                 settingsContainer.heightAnchor.constraint(equalToConstant: 75),
+                categoryButton.bottomAnchor.constraint(equalTo: settingsContainer.bottomAnchor)
             ])}
         if (trackerType == .habit){
             NSLayoutConstraint.activate([
@@ -168,6 +229,7 @@ class NewTrackerViewController: UIViewController {
                 scheduleButton.leadingAnchor.constraint(equalTo: categoryButton.leadingAnchor),
                 scheduleButton.trailingAnchor.constraint(equalTo: categoryButton.trailingAnchor),
                 scheduleButton.bottomAnchor.constraint(equalTo: settingsContainer.bottomAnchor),
+                scheduleButton.heightAnchor.constraint(equalToConstant: 75)
                 
             ])}
     }
@@ -179,8 +241,7 @@ class NewTrackerViewController: UIViewController {
     }
     
     @objc private func textFieldDidChange() {
-        let isEmpty = nameTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true
-        createButton.backgroundColor = isEmpty ? .systemGray3 : .black
+        updateCreateButtonState()
     }
     
     @objc private func createTracker() {
@@ -201,6 +262,47 @@ class NewTrackerViewController: UIViewController {
     @objc private func dismissSelf() {
         dismiss(animated: true)
     }
+    
+    private func updateCreateButtonState() {
+        let nameIsEmpty = nameTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true
+        
+        let scheduleIsValid = trackerType == .event || !selectedSchedule.isEmpty
+        
+        let shouldEnable = !nameIsEmpty && scheduleIsValid
+        
+        createButton.isEnabled = shouldEnable
+        createButton.backgroundColor = shouldEnable ? .black : .systemGray3
+    }
+    
+    private func updateCellSubtitle(for button: UIButton, with text: String?) {
+        guard
+            let fullStack = button.subviews
+                .compactMap({ $0 as? UIStackView })
+                .first(where: { $0.axis == .horizontal }),
+            let textStack = fullStack.arrangedSubviews
+                .compactMap({ $0 as? UIStackView })
+                .first(where: { $0.axis == .vertical }),
+            let subtitleLabel = textStack.arrangedSubviews
+                .compactMap({ $0 as? UILabel })
+                .first(where: { $0.tag == 99 })
+        else {
+            return
+        }
+        
+        let hasSubtitle = !(text?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
+        
+        if hasSubtitle {
+            subtitleLabel.text = text
+            subtitleLabel.isHidden = false
+        } else {
+            subtitleLabel.isHidden = true
+            subtitleLabel.text = nil
+        }
+
+        // Обновляем размер кнопки и layout
+        button.setNeedsLayout()
+        button.layoutIfNeeded()
+    }
 }
 
 
@@ -215,6 +317,24 @@ extension UITextField {
 extension NewTrackerViewController: ScheduleSelectionDelegate {
     func didSelectSchedule(_ schedule: [Weekday]) {
         selectedSchedule = schedule
+        
+        // Получаем русские сокращенные дни недели
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ru_RU")
+        let shortSymbols = formatter.shortWeekdaySymbols // ["вс", "пн", "вт", ...]
+        
+        // Сортируем и форматируем
+        let sorted = schedule.sorted { $0.index < $1.index }
+        guard let shortSymbols = formatter.shortWeekdaySymbols else { return }
+        
+        let shortDayNames = sorted.map { shortSymbols[$0.index].capitalized }
+        
+        // Формируем строку
+        let subtitle = shortDayNames.joined(separator: ", ")
+        
+        updateCellSubtitle(for: scheduleButton, with: subtitle)
+        
+        updateCreateButtonState()
     }
 }
 

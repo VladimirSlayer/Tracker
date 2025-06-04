@@ -64,6 +64,18 @@ class TrackerCell: UICollectionViewCell {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+    
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        
+        plusButton.setTitle("+", for: .normal)
+        plusButton.backgroundColor = nil
+        plusButton.layer.opacity = 1.0
+        emojiLabel.text = nil
+        nameLabel.text = nil
+        dayLabel.text = nil
+    }
+
 
     private func setupViews() {
         contentView.addSubview(cardBackground)
@@ -109,7 +121,8 @@ class TrackerCell: UICollectionViewCell {
         dayLabel.text = "\(completedDays) \(pluralizedDays(completedDays))"
         let symbol = isCompletedToday ? "✓" : "+"
         plusButton.setTitle(symbol, for: .normal)
-        plusButton.backgroundColor = isCompletedToday ? .gray : tracker.color
+        plusButton.backgroundColor = tracker.color
+        plusButton.layer.opacity = isCompletedToday ? 0.3 : 1
     }
 
     private func pluralizedDays(_ count: Int) -> String {

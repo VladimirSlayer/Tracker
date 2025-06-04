@@ -3,11 +3,14 @@ import UIKit
 class ScheduleViewController: UIViewController {
     
     weak var delegate: ScheduleSelectionDelegate?
+    
+    var preselectedDays: [Weekday] = []
 
     private let headerLabel: UILabel = {
         let label = UILabel()
         label.text = "Расписание"
         label.font = .systemFont(ofSize: 16, weight: .medium)
+        label.textColor = UIColor(named: "Black[Day]")
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -25,6 +28,7 @@ class ScheduleViewController: UIViewController {
         super.viewDidLoad()
         title = "Расписание"
         view.backgroundColor = .white
+        selectedDays = Set(preselectedDays.compactMap { Weekday.allCases.firstIndex(of: $0) })
         setupTableView()
         setupDoneButton()
     }
@@ -38,6 +42,8 @@ class ScheduleViewController: UIViewController {
         tableView.layer.masksToBounds = true
         tableView.dataSource = self
         tableView.delegate = self
+        tableView.separatorColor = UIColor(named: "Gray")
+        tableView.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
         
         NSLayoutConstraint.activate([
             tableView.topAnchor.constraint(equalTo: headerLabel.topAnchor, constant: 30),
