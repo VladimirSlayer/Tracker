@@ -107,7 +107,7 @@ class NewTrackerViewController: UIViewController {
         subtitleLabel.numberOfLines = 0
         subtitleLabel.translatesAutoresizingMaskIntoConstraints = false
         subtitleLabel.isUserInteractionEnabled = false
-        subtitleLabel.tag = 99 // <- используем для обновления текста
+        subtitleLabel.tag = 99 
         subtitleLabel.isHidden = true
         
         let textStack = UIStackView()
@@ -118,7 +118,6 @@ class NewTrackerViewController: UIViewController {
         
         textStack.addArrangedSubview(titleLabel)
         
-        // Добавляем subtitle только если будет показан
         subtitleLabel.isHidden = true
         subtitleLabel.setContentHuggingPriority(.defaultLow, for: .vertical)
         subtitleLabel.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
@@ -299,7 +298,6 @@ class NewTrackerViewController: UIViewController {
             subtitleLabel.text = nil
         }
 
-        // Обновляем размер кнопки и layout
         button.setNeedsLayout()
         button.layoutIfNeeded()
     }
@@ -318,18 +316,17 @@ extension NewTrackerViewController: ScheduleSelectionDelegate {
     func didSelectSchedule(_ schedule: [Weekday]) {
         selectedSchedule = schedule
         
-        // Получаем русские сокращенные дни недели
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "ru_RU")
-        let shortSymbols = formatter.shortWeekdaySymbols // ["вс", "пн", "вт", ...]
+        let shortSymbols = formatter.shortWeekdaySymbols
         
-        // Сортируем и форматируем
+
         let sorted = schedule.sorted { $0.index < $1.index }
         guard let shortSymbols = formatter.shortWeekdaySymbols else { return }
         
         let shortDayNames = sorted.map { shortSymbols[$0.index].capitalized }
         
-        // Формируем строку
+
         let subtitle = shortDayNames.joined(separator: ", ")
         
         updateCellSubtitle(for: scheduleButton, with: subtitle)

@@ -78,7 +78,6 @@ class TrackerTypeSelectionViewController: UIViewController {
         view.addSubview(buttonStack)
         
         NSLayoutConstraint.activate([
-            // Заголовок сверху
             titleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 24),
             titleLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
 
