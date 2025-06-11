@@ -63,7 +63,7 @@ class NewTrackerViewController: UIViewController {
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .vertical
         layout.minimumInteritemSpacing = 5
-        layout.minimumLineSpacing = 5
+        layout.minimumLineSpacing = 0
         layout.itemSize = CGSize(width: 52, height: 52)
         layout.sectionInset = UIEdgeInsets(top: 24, left: 18, bottom: 24, right: 18)
         
@@ -81,8 +81,8 @@ class NewTrackerViewController: UIViewController {
     private lazy var emojiCollectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .vertical
-        layout.minimumInteritemSpacing = 8
-        layout.minimumLineSpacing = 8
+        layout.minimumInteritemSpacing = 5
+        layout.minimumLineSpacing = 0
         layout.itemSize = CGSize(width: 52, height: 52)
         layout.sectionInset = UIEdgeInsets(top: 24, left: 18, bottom: 24, right: 18)
         
@@ -162,6 +162,14 @@ class NewTrackerViewController: UIViewController {
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
+    
+    private let buttonBackgroundView: UIView = {
+        let view = UIView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.backgroundColor = .white
+        return view
+    }()
+
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -291,8 +299,16 @@ class NewTrackerViewController: UIViewController {
         contentView.addSubview(colorLabel)
         contentView.addSubview(colorCollectionView)
         
+        view.addSubview(buttonBackgroundView)
         view.addSubview(cancelButton)
         view.addSubview(createButton)
+        
+        NSLayoutConstraint.activate([
+            buttonBackgroundView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            buttonBackgroundView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            buttonBackgroundView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            buttonBackgroundView.topAnchor.constraint(equalTo: cancelButton.topAnchor, constant: -16)
+        ])
         
         NSLayoutConstraint.activate([
             titleLabel.topAnchor.constraint(equalTo: contentView.safeAreaLayoutGuide.topAnchor, constant: 24),
