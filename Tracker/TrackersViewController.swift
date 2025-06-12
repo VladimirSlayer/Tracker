@@ -3,9 +3,11 @@ import UIKit
 class TrackersViewController: UIViewController {
     
     var categories: [TrackerCategory] = []
-    var completedTrackers: [TrackerRecord] = []
     var currentDate: Date = Date()
     var visibleCategories: [TrackerCategory] = []
+    
+    private var categoryStore: TrackerCategoryStore!
+    private var recordStore: TrackerRecordStore!
     
     private let titleLabel: UILabel = {
         let label = UILabel()
@@ -96,6 +98,14 @@ class TrackersViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        let coreDataStack = CoreDataStack.shared
+        categoryStore = TrackerCategoryStore(context: coreDataStack.context)
+        categoryStore.delegate = self
+        recordStore = TrackerRecordStore(context: coreDataStack.context)
+        
+        self.categories = categoryStore.categories
+        
         view.backgroundColor = .white
         setupUI()
         searchField.delegate = self
@@ -126,24 +136,51 @@ class TrackersViewController: UIViewController {
     @objc private func didTapPlusButton(_ sender: UIButton) {
         let section = sender.tag / 1000
         let item = sender.tag % 1000
+
+        guard section < visibleCategories.count,
+              item < visibleCategories[section].trackers.count else {
+            print("❌ didTapPlusButton: Некорректные индексы секции или элемента.")
+            return
+        }
         
         let tracker = visibleCategories[section].trackers[item]
-        
-        guard currentDate <= Date() else { return }
-        
-        let isCompleted = completedTrackers.contains {
-            $0.trackerId == tracker.id && Calendar.current.isDate($0.date, inSameDayAs: currentDate)
+
+        guard currentDate <= Date() else {
+            print("Нельзя отмечать трекеры в будущем.")
+            return
         }
-        
-        if isCompleted {
-            completedTrackers.removeAll {
-                $0.trackerId == tracker.id && Calendar.current.isDate($0.date, inSameDayAs: currentDate)
+
+        do {
+            let isCompletedCurrently = try recordStore.isTrackerCompleted(trackerId: tracker.id, onDate: currentDate)
+
+            if isCompletedCurrently {
+                try recordStore.removeRecord(for: tracker.id, on: currentDate)
+                print("✅ Запись о выполнении трекера '\(tracker.name)' на дату \(currentDate) удалена.")
+            } else {
+                try recordStore.addRecord(for: tracker.id, on: currentDate)
+                print("✅ Запись о выполнении трекера '\(tracker.name)' на дату \(currentDate) добавлена.")
             }
-        } else {
-            completedTrackers.append(TrackerRecord(id: UUID(), trackerId: tracker.id, date: currentDate))
+            
+            reloadVisibleTrackers(searchText: searchField.text ?? "")
+
+        } catch {
+            print("❌ Ошибка при обновлении записи о выполнении: \(error)")
+            reloadVisibleTrackers(searchText: searchField.text ?? "")
         }
+    }
+    
+    private func updateEmptyState() {
+        let isEmpty = visibleCategories.flatMap { $0.trackers }.isEmpty
+        emptyImageView.isHidden = !isEmpty
+        emptyLabel.isHidden = !isEmpty
         
-        collectionView.reloadData()
+        if !searchField.text!.isEmpty && isEmpty {
+            emptyImageView.image = UIImage(named: "searchPlaceholder")
+            emptyLabel.text = "Ничего не найдено"
+        } else if isEmpty {
+            emptyImageView.image = UIImage(named: "starPlaceholder")
+            emptyLabel.text = "Что будем отслеживать?"
+        }
     }
     
     
@@ -158,43 +195,52 @@ class TrackersViewController: UIViewController {
     private func reloadVisibleTrackers(searchText: String = "") {
         let calendar = Calendar.current
         let weekdayIndex = calendar.component(.weekday, from: currentDate)
-        let weekdaySymbols = calendar.shortWeekdaySymbols.map { String($0.prefix(3)) }
+        let weekdaySymbols = calendar.shortWeekdaySymbols
         let weekdayString = weekdaySymbols[weekdayIndex - 1]
         
-        guard let weekday = Weekday(rawValue: weekdayString) else { return }
-        
+        guard let currentWeekday = Weekday(rawValue: weekdayString) else {
+            print("❌ Ошибка: Не удалось преобразовать строку дня недели '\(weekdayString)' в Weekday enum.")
+            visibleCategories = []
+            updateEmptyState()
+            return
+        }
+
         visibleCategories = categories.compactMap { category in
             let filteredTrackers = category.trackers.filter { tracker in
                 let matchesSearch = searchText.isEmpty || tracker.name.lowercased().contains(searchText.lowercased())
-                
+
+                let isCompletedToday: Bool
+                do {
+                    isCompletedToday = try recordStore.isTrackerCompleted(trackerId: tracker.id, onDate: currentDate)
+                } catch {
+                    print("❌ Ошибка при проверке isCompletedToday для трекера \(tracker.id) в reloadVisibleTrackers: \(error)")
+                    isCompletedToday = false
+                }
+
                 switch tracker.type {
                 case .habit:
-                    return tracker.schedule.contains(weekday) && matchesSearch
+                    return tracker.schedule.contains(currentWeekday) && matchesSearch
+
                 case .event:
                     let isAfterCreation = currentDate >= tracker.createdDate
-                    let wasCompleted = completedTrackers.contains {
-                        $0.trackerId == tracker.id
-                    }
-                    let isCompletedToday = completedTrackers.contains {
-                        $0.trackerId == tracker.id &&
-                        Calendar.current.isDate($0.date, inSameDayAs: currentDate)
+                    
+                    let hasAnyRecords: Bool
+                    do {
+                        hasAnyRecords = !(try recordStore.fetchRecords(forTrackerId: tracker.id).isEmpty)
+                    } catch {
+                        print("❌ Ошибка при проверке hasAnyRecords для события \(tracker.id) в reloadVisibleTrackers: \(error)")
+                        hasAnyRecords = false
                     }
 
-                    return matchesSearch && (
-                        (!wasCompleted && isAfterCreation) || isCompletedToday
-                    )
+                    return matchesSearch && (isCompletedToday || (!hasAnyRecords && isAfterCreation))
                 }
             }
-
             return filteredTrackers.isEmpty ? nil : TrackerCategory(title: category.title, trackers: filteredTrackers)
         }
         
-        let isEmpty = visibleCategories.flatMap { $0.trackers }.isEmpty
-        emptyImageView.isHidden = !isEmpty
-        emptyLabel.isHidden = !isEmpty
+        updateEmptyState()
         collectionView.reloadData()
     }
-    
     
     
     func setupUI(){
@@ -269,17 +315,28 @@ extension TrackersViewController: UICollectionViewDataSource, UICollectionViewDe
         }
         
         let tracker = visibleCategories[indexPath.section].trackers[indexPath.item]
-        let completedDays = completedTrackers.filter { $0.trackerId == tracker.id }.count
         
-        let isCompletedToday = completedTrackers.contains {
-            $0.trackerId == tracker.id && Calendar.current.isDate($0.date, inSameDayAs: currentDate)
+        let completedDays: Int
+        do {
+            completedDays = try recordStore.fetchRecords(forTrackerId: tracker.id).count
+        } catch {
+            print("❌ Ошибка при получении completedDays в cellForItemAt: \(error)")
+            completedDays = 0
+        }
+        
+        let isCompletedToday: Bool
+        do {
+            isCompletedToday = try recordStore.isTrackerCompleted(trackerId: tracker.id, onDate: currentDate)
+        } catch {
+            print("❌ Ошибка при проверке isCompletedToday в cellForItemAt: \(error)")
+            isCompletedToday = false
         }
         
         cell.configure(with: tracker, completedDays: completedDays, isCompletedToday: isCompletedToday)
         
+        cell.plusButton.removeTarget(nil, action: nil, for: .allEvents)
         cell.plusButton.tag = indexPath.section * 1000 + indexPath.item
         cell.plusButton.addTarget(self, action: #selector(didTapPlusButton(_:)), for: .touchUpInside)
-        
         
         return cell
     }
@@ -287,9 +344,6 @@ extension TrackersViewController: UICollectionViewDataSource, UICollectionViewDe
     func collectionView(_ collectionView: UICollectionView,
                         layout collectionViewLayout: UICollectionViewLayout,
                         sizeForItemAt indexPath: IndexPath) -> CGSize {
-        let padding: CGFloat = 16 * 2 + 8
-        let availableWidth = collectionView.bounds.width - padding
-        let cellWidth = availableWidth / 2
         return CGSize(width: 167, height: 148)
     }
     
@@ -298,21 +352,19 @@ extension TrackersViewController: UICollectionViewDataSource, UICollectionViewDe
                         referenceSizeForHeaderInSection section: Int) -> CGSize {
         return CGSize(width: collectionView.bounds.width, height: 40)
     }
-    
 }
 
 extension TrackersViewController: TrackerCreationDelegate {
     func didCreateTracker(_ tracker: Tracker) {
         let newCategoryTitle = "Мои трекеры"
         
-        if let index = categories.firstIndex(where: { $0.title == newCategoryTitle }) {
-            categories[index].trackers.append(tracker)
-        } else {
-            let newCategory = TrackerCategory(title: newCategoryTitle, trackers: [tracker])
-            categories.append(newCategory)
+        do {
+            try categoryStore.createTracker(tracker, inCategoryTitled: newCategoryTitle)
+            self.categories = categoryStore.categories
+            reloadVisibleTrackers()
+        } catch {
+            print("❌ Не удалось создать трекер: \(error)")
         }
-        
-        reloadVisibleTrackers()
     }
 }
 
@@ -325,6 +377,14 @@ extension TrackersViewController: UISearchBarDelegate {
         searchBar.text = ""
         searchBar.resignFirstResponder()
         reloadVisibleTrackers(searchText: "")
+    }
+}
+
+extension TrackersViewController: TrackerCategoryStoreDelegate {
+    func didUpdateContent() {
+        print("🔄 TrackerCategoryStoreDelegate: didUpdateContent вызван.")
+        self.categories = categoryStore.categories
+        reloadVisibleTrackers(searchText: searchField.text ?? "")
     }
 }
 

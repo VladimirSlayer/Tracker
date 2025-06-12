@@ -1,11 +1,5 @@
-//
-//  AppDelegate.swift
-//  Tracker
-//
-//  Created by Владимир on 27.05.2025.
-//
-
 import UIKit
+import CoreData
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -32,6 +26,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Use this method to release any resources that were specific to the discarded scenes, as they will not return.
     }
     
-    
+    func applicationWillTerminate(_ application: UIApplication) {
+        CoreDataStack.shared.saveContext()
+    }
 }
 
