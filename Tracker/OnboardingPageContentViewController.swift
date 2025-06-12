@@ -29,7 +29,7 @@ final class OnboardingPageContentViewController: UIViewController {
         backgroundImageView.translatesAutoresizingMaskIntoConstraints = false
 
         textLabel.text = page.text
-        textLabel.font = .boldSystemFont(ofSize: 24)
+        textLabel.font = .boldSystemFont(ofSize: 32)
         textLabel.textColor = .black
         textLabel.textAlignment = .center
         textLabel.numberOfLines = 0

@@ -31,6 +31,7 @@ final class OnboardingViewController: UIViewController {
         button.backgroundColor = .black
         button.layer.cornerRadius = 16
         button.translatesAutoresizingMaskIntoConstraints = false
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         button.addTarget(self, action: #selector(didTapContinue), for: .touchUpInside)
         return button
     }()

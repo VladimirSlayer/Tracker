@@ -12,7 +12,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         window = UIWindow(windowScene: windowScene)
 
-        if false {
+        if UserDefaults.standard.bool(forKey: "hasCompletedOnboarding") {
             window?.rootViewController = createTabBarController()
         } else {
             let onboardingVC = OnboardingViewController()
@@ -50,10 +50,4 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         return tabBarController
     }
-
-    func sceneDidDisconnect(_ scene: UIScene) {}
-    func sceneDidBecomeActive(_ scene: UIScene) {}
-    func sceneWillResignActive(_ scene: UIScene) {}
-    func sceneWillEnterForeground(_ scene: UIScene) {}
-    func sceneDidEnterBackground(_ scene: UIScene) {}
 }
