@@ -45,13 +45,14 @@ final class TrackerCategoryStore: NSObject, NSFetchedResultsControllerDelegate {
                 }
                 print("  Количество успешно сконвертированных Tracker в КАТЕГОРИИ '\(coreDataCategory.title ?? "Без названия")' после compactMap: \(trackers.count)")
 
-                if trackers.isEmpty {
-                    print("  Категория '\(coreDataCategory.title ?? "Без названия")' будет отфильтрована (трекеров нет).")
-                    return nil
-                } else {
-                    return TrackerCategory(title: coreDataCategory.title ?? "", trackers: trackers)
-                }
+                return TrackerCategory(title: coreDataCategory.title ?? "", trackers: trackers)
             }
+    }
+    
+    func createCategory(title: String) throws {
+        let category = TrackerCategoryCoreData(context: context)
+        category.title = title
+        try context.save()
     }
     
     func createTracker(_ tracker: Tracker, inCategoryTitled categoryTitle: String) throws {

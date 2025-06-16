@@ -6,6 +6,7 @@ class NewTrackerViewController: UIViewController {
     var trackerType: TrackerType = .habit
     private var selectedSchedule: [Weekday] = []
     var initialDate: Date = Date()
+    private var selectedCategory: TrackerCategory?
     
     private var scheduleTopConstraint: NSLayoutConstraint?
     private var scheduleBottomConstraint: NSLayoutConstraint?
@@ -386,7 +387,16 @@ class NewTrackerViewController: UIViewController {
         nameTextField.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
         cancelButton.addTarget(self, action: #selector(dismissSelf), for: .touchUpInside)
         createButton.addTarget(self, action: #selector(createTracker), for: .touchUpInside)
+        categoryButton.addTarget(self, action: #selector(openCategorySelection), for: .touchUpInside)
+
     }
+    
+    @objc private func openCategorySelection() {
+        let categoryVC = CategorySelectionViewController()
+        categoryVC.delegate = self
+        present(categoryVC, animated: true)
+    }
+
     
     @objc private func textFieldDidChange() {
         updateCreateButtonState()
@@ -530,4 +540,14 @@ extension NewTrackerViewController: UICollectionViewDataSource, UICollectionView
         updateCreateButtonState()
     }
 }
+
+extension NewTrackerViewController: CategorySelectionDelegate {
+    func didSelectCategory(_ category: TrackerCategory) {
+        selectedCategory = category
+        updateCellSubtitle(for: categoryButton, with: category.title)
+        updateCreateButtonState()
+    }
+}
+
+
 
