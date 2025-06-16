@@ -6,7 +6,7 @@ class TrackerSectionHeaderView: UICollectionReusableView {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = .boldSystemFont(ofSize: 19)
-        label.textColor = .black
+        label.textColor = UIColor(named: "Black[Day]")
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()

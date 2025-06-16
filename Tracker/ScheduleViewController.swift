@@ -27,7 +27,7 @@ class ScheduleViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "Расписание"
-        view.backgroundColor = .white
+        view.backgroundColor = UIColor(named: "White")
         selectedDays = Set(preselectedDays.compactMap { Weekday.allCases.firstIndex(of: $0) })
         setupTableView()
         setupDoneButton()
@@ -58,8 +58,8 @@ class ScheduleViewController: UIViewController {
     
     private func setupDoneButton() {
         doneButton.setTitle("Готово", for: .normal)
-        doneButton.setTitleColor(.white, for: .normal)
-        doneButton.backgroundColor = .black
+        doneButton.setTitleColor(UIColor(named: "White"), for: .normal)
+        doneButton.backgroundColor = UIColor(named: "Black[Day]")
         doneButton.layer.cornerRadius = 16
         doneButton.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(doneButton)
@@ -102,7 +102,7 @@ extension ScheduleViewController: UITableViewDataSource, UITableViewDelegate {
     }
     
     func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
-        cell.superview?.superview?.backgroundColor = .white
+        cell.superview?.superview?.backgroundColor = UIColor(named: "White")
     }
     
     @objc private func switchChanged(_ sender: UISwitch) {

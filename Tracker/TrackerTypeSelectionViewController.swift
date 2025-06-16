@@ -17,8 +17,8 @@ class TrackerTypeSelectionViewController: UIViewController {
     private let habitButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("Привычка", for: .normal)
-        button.setTitleColor(.white, for: .normal)
-        button.backgroundColor = .black
+        button.setTitleColor(UIColor(named: "White"), for: .normal)
+        button.backgroundColor = UIColor(named: "Black[Day]")
         button.layer.cornerRadius = 16
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
@@ -27,8 +27,8 @@ class TrackerTypeSelectionViewController: UIViewController {
     private let eventButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("Нерегулярное событие", for: .normal)
-        button.setTitleColor(.white, for: .normal)
-        button.backgroundColor = .black
+        button.setTitleColor(UIColor(named: "White"), for: .normal)
+        button.backgroundColor = UIColor(named: "Black[Day]")
         button.layer.cornerRadius = 16
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
@@ -46,7 +46,7 @@ class TrackerTypeSelectionViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .white
+        view.backgroundColor = UIColor(named: "White")
         layoutUI()
         setupActions()
     }

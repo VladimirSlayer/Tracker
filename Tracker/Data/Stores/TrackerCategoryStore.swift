@@ -123,6 +123,58 @@ final class TrackerCategoryStore: NSObject, NSFetchedResultsControllerDelegate {
     }
     func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
             print("🔄 NSFetchedResultsControllerDelegate: Данные изменились. Уведомляем делегата.")
-            delegate?.didUpdateContent()
+        delegate?.didUpdateContent()
         }
+    
+    func updateTracker(_ tracker: Tracker, toCategory category: TrackerCategory) throws {
+        let request: NSFetchRequest<TrackerCoreData> = TrackerCoreData.fetchRequest()
+        request.predicate = NSPredicate(format: "id == %@", tracker.id as CVarArg)
+
+        guard let existingTracker = try context.fetch(request).first else {
+            throw NSError(domain: "TrackerCategoryStore", code: 404, userInfo: [NSLocalizedDescriptionKey: "Трекер не найден"])
+        }
+
+        // Найди старую категорию и отвяжи трекер
+        if let oldCategory = existingTracker.category {
+            oldCategory.removeFromTrackers(existingTracker)
+        }
+
+        // Найди новую категорию
+        let categoryRequest: NSFetchRequest<TrackerCategoryCoreData> = TrackerCategoryCoreData.fetchRequest()
+        categoryRequest.predicate = NSPredicate(format: "title == %@", category.title)
+        
+        guard let newCategoryCD = try context.fetch(categoryRequest).first else {
+            throw NSError(domain: "TrackerCategoryStore", code: 404, userInfo: [NSLocalizedDescriptionKey: "Категория не найдена"])
+        }
+
+        // Обнови трекер
+        existingTracker.name = tracker.name
+        existingTracker.color = tracker.color
+        existingTracker.emoji = tracker.emoji
+        existingTracker.schedule = tracker.schedule.map(\.rawValue) as NSArray
+        existingTracker.type = tracker.type.rawValue
+        existingTracker.createdDate = tracker.createdDate
+        existingTracker.isPinned = tracker.isPinned
+
+        // Привяжи к новой категории
+        newCategoryCD.addToTrackers(existingTracker)
+
+        try context.save()
+
+        print("✅ Трекер '\(tracker.name)' успешно обновлен и перенесён в категорию '\(category.title)'")
+    }
+    
+    func deleteTracker(_ tracker: Tracker) throws {
+        let request: NSFetchRequest<TrackerCoreData> = TrackerCoreData.fetchRequest()
+        request.predicate = NSPredicate(format: "id == %@", tracker.id as CVarArg)
+
+        if let trackerToDelete = try context.fetch(request).first {
+            context.delete(trackerToDelete)
+            try context.save()
+            print("✅ Трекер удалён: \(tracker.name)")
+        } else {
+            print("⚠️ Трекер для удаления не найден")
+        }
+    }
+
 }

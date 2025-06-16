@@ -1,5 +1,6 @@
 import UIKit
 import CoreData
+import YandexMobileMetrica
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -7,12 +8,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
-        
+        guard let configuration = YMMYandexMetricaConfiguration(apiKey: "cf888500-84a1-477f-96e6-be718b5b2538") else {
+            return true
+        }
+        YMMYandexMetrica.activate(with: configuration)
         return true
     }
     
-    // MARK: UISceneSession Lifecycle
+    // MARK: UISceneSession Lifecycle   
     
     func application(_ application: UIApplication, configurationForConnecting connectingSceneSession: UISceneSession, options: UIScene.ConnectionOptions) -> UISceneConfiguration {
         // Called when a new scene session is being created.

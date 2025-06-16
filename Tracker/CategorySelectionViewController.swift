@@ -6,6 +6,7 @@ final class CategorySelectionViewController: UIViewController {
     private var viewModel: CategorySelectionViewModel!
     private var selectedIndexPath: IndexPath?
     private var tableHeightConstraint: NSLayoutConstraint?
+    var initiallySelectedCategory: TrackerCategory?
 
     // MARK: - UI
     
@@ -29,7 +30,7 @@ final class CategorySelectionViewController: UIViewController {
     private let tableView: UITableView = {
         let table = UITableView()
         table.backgroundColor = .clear
-        table.separatorStyle = .none
+        table.separatorColor = UIColor(named: "Gray")
         table.translatesAutoresizingMaskIntoConstraints = false
         table.isScrollEnabled = false // ✅ отключаем скролл
         table.rowHeight = 75
@@ -57,8 +58,8 @@ final class CategorySelectionViewController: UIViewController {
     private let addButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("Добавить категорию", for: .normal)
-        button.setTitleColor(.white, for: .normal)
-        button.backgroundColor = .black
+        button.setTitleColor(UIColor(named: "White"), for: .normal)
+        button.backgroundColor = UIColor(named: "Black[Day]")
         button.layer.cornerRadius = 16
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
@@ -71,10 +72,19 @@ final class CategorySelectionViewController: UIViewController {
         setupViewModel()
         setupUI()
         setupBindings()
+        setupSelectedIndex()
         updateUI()
     }
 
     // MARK: - Setup
+    
+    private func setupSelectedIndex() {
+        if let selected = initiallySelectedCategory {
+            if let index = viewModel.categories.firstIndex(where: { $0.title == selected.title }) {
+                selectedIndexPath = IndexPath(row: index, section: 0)
+            }
+        }
+    }
     
     private func setupViewModel() {
         let context = CoreDataStack.shared.context
@@ -105,7 +115,7 @@ final class CategorySelectionViewController: UIViewController {
     }
 
     private func setupUI() {
-        view.backgroundColor = UIColor(named: "White[Day]") ?? .white
+        view.backgroundColor = UIColor(named: "White")
         view.layer.cornerRadius = 16
         view.clipsToBounds = true
 
