@@ -32,7 +32,7 @@ final class CategorySelectionViewController: UIViewController {
         table.backgroundColor = .clear
         table.separatorColor = UIColor(named: "Gray")
         table.translatesAutoresizingMaskIntoConstraints = false
-        table.isScrollEnabled = false // ✅ отключаем скролл
+        table.isScrollEnabled = false
         table.rowHeight = 75
         return table
     }()

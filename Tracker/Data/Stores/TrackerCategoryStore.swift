@@ -134,12 +134,12 @@ final class TrackerCategoryStore: NSObject, NSFetchedResultsControllerDelegate {
             throw NSError(domain: "TrackerCategoryStore", code: 404, userInfo: [NSLocalizedDescriptionKey: "Трекер не найден"])
         }
 
-        // Найди старую категорию и отвяжи трекер
+        
         if let oldCategory = existingTracker.category {
             oldCategory.removeFromTrackers(existingTracker)
         }
 
-        // Найди новую категорию
+        
         let categoryRequest: NSFetchRequest<TrackerCategoryCoreData> = TrackerCategoryCoreData.fetchRequest()
         categoryRequest.predicate = NSPredicate(format: "title == %@", category.title)
         
@@ -147,7 +147,7 @@ final class TrackerCategoryStore: NSObject, NSFetchedResultsControllerDelegate {
             throw NSError(domain: "TrackerCategoryStore", code: 404, userInfo: [NSLocalizedDescriptionKey: "Категория не найдена"])
         }
 
-        // Обнови трекер
+        
         existingTracker.name = tracker.name
         existingTracker.color = tracker.color
         existingTracker.emoji = tracker.emoji
@@ -156,7 +156,7 @@ final class TrackerCategoryStore: NSObject, NSFetchedResultsControllerDelegate {
         existingTracker.createdDate = tracker.createdDate
         existingTracker.isPinned = tracker.isPinned
 
-        // Привяжи к новой категории
+        
         newCategoryCD.addToTrackers(existingTracker)
 
         try context.save()

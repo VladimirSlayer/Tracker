@@ -45,7 +45,7 @@ class TrackerCell: UICollectionViewCell, UIContextMenuInteractionDelegate {
         let imageView = UIImageView(image: UIImage(systemName: "pin.fill"))
         imageView.tintColor = .white
         imageView.translatesAutoresizingMaskIntoConstraints = false
-        imageView.isHidden = true // скрыта по умолчанию
+        imageView.isHidden = true
         return imageView
     }()
     
@@ -131,7 +131,7 @@ class TrackerCell: UICollectionViewCell, UIContextMenuInteractionDelegate {
         alert.addAction(delete)
         alert.addAction(cancel)
 
-        // Чтобы не крашилось на iPad
+        
         if let popover = alert.popoverPresentationController {
             popover.sourceView = self
             popover.sourceRect = self.bounds

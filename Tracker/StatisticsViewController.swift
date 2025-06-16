@@ -103,7 +103,7 @@ class StatisticsViewController: UIViewController {
     }
     
     private func refreshStatistics() {
-        // Удалим старые views, если они есть
+        
         statsStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
         emptyImageView.removeFromSuperview()
         emptyLabel.removeFromSuperview()

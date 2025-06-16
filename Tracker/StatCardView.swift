@@ -37,7 +37,7 @@ final class StatCardView: UIView {
         layer.cornerRadius = 16
         clipsToBounds = true
 
-        // ✅ Горизонтальный градиент с 3 цветами
+        
         gradientBorder.colors = [
             UIColor(hex: "#007BFA").cgColor,
             UIColor(hex: "#46E69D").cgColor,
@@ -48,7 +48,7 @@ final class StatCardView: UIView {
         gradientBorder.cornerRadius = 16
         layer.addSublayer(gradientBorder)
 
-        // Маска только по контуру
+        
         borderMask.lineWidth = 2
         borderMask.fillColor = UIColor.clear.cgColor
         borderMask.strokeColor = UIColor.black.cgColor
@@ -76,7 +76,7 @@ final class StatCardView: UIView {
     }
 }
 
-// ✅ Расширение для UIColor по hex
+
 extension UIColor {
     convenience init(hex: String) {
         var hexSanitized = hex.trimmingCharacters(in: .whitespacesAndNewlines)

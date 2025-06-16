@@ -21,7 +21,7 @@ final class AnalyticsService {
             parameters["item"] = item
         }
 
-        // Лог для отладки
+        
         print("🔹Analytics Reported: \(parameters)")
 
         YMMYandexMetrica.reportEvent("ui_event", parameters: parameters) { error in

@@ -12,7 +12,7 @@ class NewTrackerViewController: UIViewController {
     private var scheduleBottomConstraint: NSLayoutConstraint?
     
     var trackerToEdit: Tracker?
-    var completedDays: Int = 0 // для отображения "5 дней"
+    var completedDays: Int = 0
     
     private let emojis = ["🙂", "😻", "🌺", "🐶", "❤️", "😱", "😇", "😡", "🥶", "🤔", "🙌", "🍔", "🥦", "🏓", "🥇", "🎸", "🏝️", "😪"]
     private var selectedEmojiIndex: IndexPath?
@@ -435,7 +435,7 @@ class NewTrackerViewController: UIViewController {
             colorCollectionView.selectItem(at: selectedColorIndex, animated: false, scrollPosition: [])
         }
 
-        // Выставляем расписание
+        
         if trackerType == .habit {
             let formatter = DateFormatter()
             formatter.locale = Locale(identifier: "ru_RU")
@@ -446,7 +446,7 @@ class NewTrackerViewController: UIViewController {
             updateCellSubtitle(for: scheduleButton, with: shortDayNames.joined(separator: ", "))
         }
 
-        // Заголовок с количеством дней
+        
         doneDaysLabel.text = "\(completedDays) \(pluralizedDays(completedDays))"
         doneDaysLabel.isHidden = false
 
@@ -455,7 +455,7 @@ class NewTrackerViewController: UIViewController {
             doneDaysLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 38)
         ])
 
-        // Сдвигаем nameTextField вниз (если ты не используешь уже констрейнт)
+        
         nameTextField.topAnchor.constraint(equalTo: doneDaysLabel.bottomAnchor, constant: 24).isActive = true
 
         updateCreateButtonState()

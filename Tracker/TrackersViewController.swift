@@ -226,7 +226,7 @@ class TrackersViewController: UIViewController {
     private func reloadVisibleTrackers(searchText: String = "") {
         let calendar = Calendar.current
         let weekdayIndex = calendar.component(.weekday, from: currentDate)
-        // Weekday enum должен инициализироваться по индексу
+        
         guard let currentWeekday = Weekday(index: weekdayIndex) else {
             print("❌ Ошибка: Не удалось преобразовать день недели")
             visibleCategories = []
@@ -252,14 +252,14 @@ class TrackersViewController: UIViewController {
                     continue
                 }
 
-                // Применение фильтра
+                
                 switch selectedFilter {
                 case .completed:
                     if !isCompletedToday { continue }
                 case .uncompleted:
                     if isCompletedToday { continue }
                 case .today:
-                    currentDate = Date() // опционально обновляем дату
+                    currentDate = Date()
                 case .all:
                     break
                 }
@@ -498,7 +498,7 @@ extension TrackersViewController: TrackerCellDelegate {
         editorVC.completedDays = (try? recordStore.fetchRecords(forTrackerId: tracker.id).count) ?? 0
         editorVC.delegate = self
 
-        // 🔽 передаем категорию
+        
         let category = visibleCategories[indexPath.section]
         editorVC.selectedCategory = category
 
@@ -533,7 +533,7 @@ extension TrackersViewController: FilterSelectionDelegate {
         }
 
         reloadVisibleTrackers(searchText: searchField.text ?? "")
-        dismiss(animated: true) // Закрытие фильтрового экрана
+        dismiss(animated: true) 
     }
 
 }

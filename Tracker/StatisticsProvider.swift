@@ -20,22 +20,22 @@ final class StatisticsProvider {
         let records = recordStore.records
         let calendar = Calendar.current
 
-        // Все даты без времени
+        
         let normalizedDates = records.map { calendar.startOfDay(for: $0.date) }
 
-        // Группируем записи по дате
+        
         let recordsByDay = Dictionary(grouping: normalizedDates, by: { $0 })
 
         let allTrackers = trackerStore.trackers
         let totalTrackers = allTrackers.count
 
-        // Завершено всего
+        
         let completedCount = records.count
 
-        // Лучший период: макс кол-во подряд идущих дней с выполнениями
+        
         let bestPeriod = calculateLongestStreak(from: Set(normalizedDates))
 
-        // Идеальные дни: дни, когда выполнены все трекеры
+        
         let perfectDays = recordsByDay.filter { $0.value.count == totalTrackers }.count
 
         // Среднее: выполнений / дней
