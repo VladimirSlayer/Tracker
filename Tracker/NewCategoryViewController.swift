@@ -19,7 +19,6 @@ final class NewCategoryViewController: UIViewController {
     private let doneButton = UIButton(type: .system)
     
     override func viewDidLoad() {
-        
         super.viewDidLoad()
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
         tapGesture.cancelsTouchesInView = false
@@ -36,7 +35,7 @@ final class NewCategoryViewController: UIViewController {
     }
     
     private func setupUI() {
-        view.backgroundColor = .white
+        view.backgroundColor = UIColor(named: "White")
         view.layer.cornerRadius = 16
         view.clipsToBounds = true
 
@@ -53,8 +52,8 @@ final class NewCategoryViewController: UIViewController {
         textField.setLeftPaddingPoints(16)
 
         doneButton.setTitle("Готово", for: .normal)
-        doneButton.setTitleColor(.white, for: .normal)
-        doneButton.backgroundColor = .systemGray3
+        doneButton.setTitleColor(UIColor(named: "White"), for: .normal)
+        doneButton.backgroundColor = UIColor(named: "Black[Day]")
         doneButton.layer.cornerRadius = 16
         doneButton.isEnabled = false
         doneButton.translatesAutoresizingMaskIntoConstraints = false

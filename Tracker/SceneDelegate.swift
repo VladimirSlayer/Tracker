@@ -27,10 +27,18 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     private func createTabBarController() -> UITabBarController {
         let trackersVC = TrackersViewController()
-        trackersVC.tabBarItem = UITabBarItem(title: "Трекеры", image: UIImage(named: "trackerTabIcon"), tag: 0)
+        trackersVC.tabBarItem = UITabBarItem(
+            title: NSLocalizedString("tab.trackers", comment: "Название вкладки Трекеры"),
+            image: UIImage(named: "trackerTabIcon"),
+            tag: 0
+        )
 
         let statisticsVC = StatisticsViewController()
-        statisticsVC.tabBarItem = UITabBarItem(title: "Статистика", image: UIImage(named: "statisticTabIcon"), tag: 1)
+        statisticsVC.tabBarItem = UITabBarItem(
+            title: NSLocalizedString("tab.statistics", comment: "Название вкладки Статистика"),
+            image: UIImage(named: "statisticTabIcon"),
+            tag: 1
+        )
 
         let tabBarController = UITabBarController()
         tabBarController.viewControllers = [trackersVC, statisticsVC]

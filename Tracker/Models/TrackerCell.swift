@@ -1,7 +1,37 @@
 import UIKit
 
-class TrackerCell: UICollectionViewCell {
+class TrackerCell: UICollectionViewCell, UIContextMenuInteractionDelegate {
+    
+    func contextMenuInteraction(_ interaction: UIContextMenuInteraction,
+                                 configurationForMenuAtLocation location: CGPoint) -> UIContextMenuConfiguration? {
+        return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { [weak self] _ in
+            guard let self = self else {
+                return UIMenu(title: "", children: [])
+            }
+
+            let isPinned = self.tracker?.isPinned ?? false
+            let pinTitle = isPinned ? "Открепить" : "Закрепить"
+            let pinImage = UIImage(systemName: isPinned ? "pin.slash" : "pin")
+
+            let pinAction = UIAction(title: pinTitle, image: pinImage) { _ in
+                self.delegate?.didRequestPinToggle(for: self)
+            }
+
+            let editAction = UIAction(title: "Редактировать", image: UIImage(systemName: "pencil")) { _ in
+                self.delegate?.didRequestEdit(for: self)
+            }
+
+            let deleteAction = UIAction(title: "Удалить", image: UIImage(systemName: "trash"), attributes: .destructive) { _ in
+                self.showDeleteConfirmation()
+            }
+
+            return UIMenu(title: "", children: [pinAction, editAction, deleteAction])
+        }
+    }
+    
     static let identifier = "TrackerCell"
+    weak var delegate: TrackerCellDelegate?
+    private var tracker: Tracker?
     
     private let cardBackground: UIView = {
         let view = UIView()
@@ -9,6 +39,14 @@ class TrackerCell: UICollectionViewCell {
         view.layer.cornerRadius = 12
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
+    }()
+    
+    private let pinIconView: UIImageView = {
+        let imageView = UIImageView(image: UIImage(systemName: "pin.fill"))
+        imageView.tintColor = .white
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        imageView.isHidden = true
+        return imageView
     }()
     
     private let emojiBackground: UIView = {
@@ -30,7 +68,7 @@ class TrackerCell: UICollectionViewCell {
     private let nameLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 12, weight: .medium)
-        label.textColor = .white
+        label.textColor = UIColor(named: "Black[Day]")
         label.numberOfLines = 2
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -39,7 +77,7 @@ class TrackerCell: UICollectionViewCell {
     private let dayLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 12)
-        label.textColor = .black
+        label.textColor = UIColor(named: "Black[Day]")
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -47,7 +85,7 @@ class TrackerCell: UICollectionViewCell {
     let plusButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("+", for: .normal)
-        button.setTitleColor(.white, for: .normal)
+        button.setTitleColor(UIColor(named: "White"), for: .normal)
         button.layer.cornerRadius = 17
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
@@ -57,8 +95,8 @@ class TrackerCell: UICollectionViewCell {
         super.init(frame: frame)
         contentView.layer.cornerRadius = 16
         contentView.layer.masksToBounds = true
-        
         setupViews()
+        setupContextMenuInteraction()
     }
     
     required init?(coder: NSCoder) {
@@ -75,17 +113,49 @@ class TrackerCell: UICollectionViewCell {
         nameLabel.text = nil
         dayLabel.text = nil
     }
+    
+    private func showDeleteConfirmation() {
+        let alert = UIAlertController(
+            title: nil,
+            message: "Уверены что хотите удалить трекер?",
+            preferredStyle: .actionSheet
+        )
 
+        let delete = UIAlertAction(title: "Удалить", style: .destructive) { [weak self] _ in
+            guard let self = self else { return }
+            self.delegate?.didRequestDelete(for: self)
+        }
+
+        let cancel = UIAlertAction(title: "Отменить", style: .cancel)
+
+        alert.addAction(delete)
+        alert.addAction(cancel)
+
+        
+        if let popover = alert.popoverPresentationController {
+            popover.sourceView = self
+            popover.sourceRect = self.bounds
+        }
+
+        self.parentViewController?.present(alert, animated: true)
+    }
+    
+    private func setupContextMenuInteraction() {
+        let interaction = UIContextMenuInteraction(delegate: self)
+        cardBackground.addInteraction(interaction)
+    }
 
     private func setupViews() {
         contentView.addSubview(cardBackground)
         cardBackground.addSubview(emojiBackground)
         emojiBackground.addSubview(emojiLabel)
         cardBackground.addSubview(nameLabel)
+        cardBackground.addSubview(pinIconView)
         contentView.addSubview(dayLabel)
         contentView.addSubview(plusButton)
         
         NSLayoutConstraint.activate([
+            
             cardBackground.widthAnchor.constraint(equalToConstant: 167),
             cardBackground.heightAnchor.constraint(equalToConstant: 90),
             
@@ -102,6 +172,11 @@ class TrackerCell: UICollectionViewCell {
             nameLabel.trailingAnchor.constraint(equalTo: cardBackground.trailingAnchor, constant: -12),
             nameLabel.topAnchor.constraint(equalTo: emojiBackground.bottomAnchor, constant: -12),
             
+            pinIconView.topAnchor.constraint(equalTo: cardBackground.topAnchor, constant: 18),
+            pinIconView.trailingAnchor.constraint(equalTo: cardBackground.trailingAnchor, constant: -12),
+            pinIconView.widthAnchor.constraint(equalToConstant: 8),
+            pinIconView.heightAnchor.constraint(equalToConstant: 12),
+            
             dayLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -24),
             dayLabel.leftAnchor.constraint(equalTo: contentView.leftAnchor, constant: 12),
 
@@ -113,16 +188,21 @@ class TrackerCell: UICollectionViewCell {
     }
     
     func configure(with tracker: Tracker, completedDays: Int, isCompletedToday: Bool) {
+        self.tracker = tracker
         contentView.backgroundColor = .clear
         plusButton.backgroundColor = tracker.color
         cardBackground.backgroundColor = tracker.color
         emojiLabel.text = tracker.emoji
         nameLabel.text = tracker.name
-        dayLabel.text = "\(completedDays) \(pluralizedDays(completedDays))"
+        dayLabel.text = String.localizedStringWithFormat(
+            NSLocalizedString("days.count", comment: "Счетчик дней"),
+            completedDays
+        )
         let symbol = isCompletedToday ? "✓" : "+"
         plusButton.setTitle(symbol, for: .normal)
         plusButton.backgroundColor = tracker.color
         plusButton.layer.opacity = isCompletedToday ? 0.3 : 1
+        pinIconView.isHidden = !tracker.isPinned
     }
 
     private func pluralizedDays(_ count: Int) -> String {
@@ -131,5 +211,24 @@ class TrackerCell: UICollectionViewCell {
         case 2, 3, 4 where !(12...14).contains(count % 100): return "дня"
         default: return "дней"
         }
+    }
+}
+
+protocol TrackerCellDelegate: AnyObject {
+    func didRequestDelete(for cell: TrackerCell)
+    func didRequestPinToggle(for cell: TrackerCell)
+    func didRequestEdit(for cell: TrackerCell)
+}
+
+extension UIView {
+    var parentViewController: UIViewController? {
+        var responder: UIResponder? = self
+        while let next = responder?.next {
+            if let vc = next as? UIViewController {
+                return vc
+            }
+            responder = next
+        }
+        return nil
     }
 }

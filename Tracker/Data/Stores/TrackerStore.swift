@@ -31,5 +31,19 @@ final class TrackerStore: NSObject, NSFetchedResultsControllerDelegate {
     var trackers: [Tracker] {
         (fetchedResultsController.fetchedObjects ?? []).compactMap { Tracker(coreData: $0) }
     }
+    
+    func togglePin(for trackerId: UUID) throws {
+        let request: NSFetchRequest<TrackerCoreData> = TrackerCoreData.fetchRequest()
+        request.predicate = NSPredicate(format: "id == %@", trackerId as CVarArg)
+        request.fetchLimit = 1
+
+        guard let trackerCoreData = try context.fetch(request).first else {
+            print("⚠️ Tracker with id \(trackerId) not found.")
+            return
+        }
+
+        trackerCoreData.isPinned.toggle()
+        try context.save()
+    }
 
 }

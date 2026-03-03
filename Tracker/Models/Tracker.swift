@@ -9,6 +9,7 @@ struct Tracker: Identifiable, Equatable {
     let schedule: [Weekday]
     let type: TrackerType
     let createdDate: Date
+    var isPinned: Bool = false
 }
 
 enum TrackerType: String, Codable {
@@ -36,6 +37,21 @@ extension Weekday {
         case .thursday: return 4
         case .friday: return 5
         case .saturday: return 6
+        }
+    }
+}
+
+extension Weekday {
+    init?(index: Int) {
+        switch index {
+        case 1: self = .sunday
+        case 2: self = .monday
+        case 3: self = .tuesday
+        case 4: self = .wednesday
+        case 5: self = .thursday
+        case 6: self = .friday
+        case 7: self = .saturday
+        default: return nil
         }
     }
 }
@@ -141,7 +157,7 @@ extension Tracker {
         }
 
         print("--- Инициализатор Tracker успешно завершен для: '\(name)' ---")
-        self.init(id: id, name: name, color: color, emoji: emoji, schedule: schedule, type: type, createdDate: createdDate)
+        self.init(id: id, name: name, color: color, emoji: emoji, schedule: schedule, type: type, createdDate: createdDate, isPinned: coreData.isPinned)
     }
 }
 
